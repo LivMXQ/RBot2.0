@@ -1,0 +1,8 @@
+ticket_numbers
+venv
+.env
+.venv
+.config
+discord.log
+.replit
+replit.nix
