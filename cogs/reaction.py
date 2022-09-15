@@ -2,8 +2,9 @@ import discord
 from replit import Database
 import pickle
 from discord.ext import commands
+import os
 
-db = Database("https://kv.replit.com/v0/eyJhbGciOiJIUzUxMiIsImlzcyI6ImNvbm1hbiIsImtpZCI6InByb2Q6MSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb25tYW4iLCJleHAiOjE2NjMzNDY0ODIsImlhdCI6MTY2MzIzNDg4MiwiZGF0YWJhc2VfaWQiOiJiODY2ZTkxMi0zNzkwLTRjYmYtOTI1NC1hNTc5ZjllZDNiMTMiLCJ1c2VyIjoiTVhRTGl2Iiwic2x1ZyI6IlJCb3QyMCJ9.J-h0UgqHKSHwI1Bt26O0YCn8y9JAmEwUz6m8hB_-ZiJWfQlzxJbj-A_Cz97FLN7gHJjSq0Jo73WHS1g0ZDr0JQ")
+db = Database(os.getenv("REPLIT_DB_URL"))
 
 db["reaction_roles"] = {}
 
