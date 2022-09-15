@@ -10,25 +10,25 @@ class Error(commands.Cog):
   async def on_application_command_error(self, ctx: commands.Context, error: commands.CommandError):
     if isinstance(error, commands.CommandOnCooldown):
       message = f"This command is on cooldown. Try again in {round(error.retry_after, 1)} seconds."
-      await ctx.respond(content=message)
+      await ctx.followup.send(content=message, ephemeral=True)
 
     elif isinstance(error, NotTicketChannel):
       message = "This is not a ticket lmao"   
-      await ctx.respond(content=message)
+      await ctx.followup.send(content=message, ephemeral=True)
       
     elif isinstance(error, commands.CommandNotFound):
       pass
       
     elif isinstance(error, commands.MissingPermissions):
       message = "You don't have the permissions for this!"
-      await ctx.respond(content=message)
+      await ctx.followup.send(content=message, ephemeral=True)
 
     elif isinstance(error, commands.NotOwner):
       message = "You are not the owner of the bot!"
-      await ctx.respond(content=message)
+      await ctx.followup.send(content=message, ephemeral=True)
 
     else:
-      await ctx.respond(content=error)
+      await ctx.followup.send(content=error, ephemeral=True)
 
 def setup(bot: commands.Bot):
   bot.add_cog(Error(bot))

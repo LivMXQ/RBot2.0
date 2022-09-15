@@ -6,3 +6,12 @@ venv
 discord.log
 .replit
 replit.nix
+.
+.gitignore
+__pycache__
+.lock
+peotry.lock
+pyproject.toml
+discord.log
+ticket_numbers
+cogs/__pycache__

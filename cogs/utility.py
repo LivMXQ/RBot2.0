@@ -1,10 +1,14 @@
 import random
 import discord
 import asyncio
+import numpy
 from cogs.error import NotTicketChannel
 from discord.ui import Button, View
 from discord.ext import commands, tasks
-from replit import db
+from replit import Database
+
+
+db = Database("https://kv.replit.com/v0/eyJhbGciOiJIUzUxMiIsImlzcyI6ImNvbm1hbiIsImtpZCI6InByb2Q6MSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjb25tYW4iLCJleHAiOjE2NjMzNDY0ODIsImlhdCI6MTY2MzIzNDg4MiwiZGF0YWJhc2VfaWQiOiJiODY2ZTkxMi0zNzkwLTRjYmYtOTI1NC1hNTc5ZjllZDNiMTMiLCJ1c2VyIjoiTVhRTGl2Iiwic2x1ZyI6IlJCb3QyMCJ9.J-h0UgqHKSHwI1Bt26O0YCn8y9JAmEwUz6m8hB_-ZiJWfQlzxJbj-A_Cz97FLN7gHJjSq0Jo73WHS1g0ZDr0JQ")
 
 class VerifyView(View):
   def __init__(self):
@@ -91,20 +95,21 @@ Spamming tickets will earn you a warning/kick!
     quotes = db["quotelist"]
     if len(quotes) == 0:
       await ctx.respond("There are no more quotes! Please wait")
-    for i in range(amount):
-      view = View()
-      channel = self.bot.get_channel(922440576115281981)
-      id = random.choice(quotes)
-      message = await channel.fetch_message(id)
-      if len(message.content) > 256:
-        await ctx.respond("message too long, pls ask someone to fix", ephemeral=True)
-      else:
-        quotes.remove(id)
-        linkbtn = Button(label="Jump!", style=discord.ButtonStyle.link, url=message.jump_url)
-        view.add_item(linkbtn)
-        embed = discord.Embed(description=f"Random quote from {channel.mention}", title=message.content)
-        embed.set_author(name=message.author.name)
-        await ctx.respond(embed=embed, view=view)
+    else:
+      for i in range(amount):
+        view = View()
+        channel = self.bot.get_channel(922440576115281981)
+        id = random.choice(quotes)
+        message = await channel.fetch_message(id)
+        if len(message.content) > 256:
+          await ctx.respond("message too long, pls ask someone to fix", ephemeral=True)
+        else:
+          quotes.remove(id)
+          linkbtn = Button(label="Jump!", style=discord.ButtonStyle.link, url=message.jump_url)
+          view.add_item(linkbtn)
+          embed = discord.Embed(description=f"Random quote from {channel.mention}", title=message.content)
+          embed.set_author(name=message.author.name)
+          await ctx.respond(embed=embed, view=view)
         
       
   @discord.slash_command(name="delete", guild_ids=[846263154546573333]) 
@@ -122,18 +127,76 @@ Spamming tickets will earn you a warning/kick!
   async def ban(self, ctx, user:discord.User):
     await ctx.respond(f"{user.mention} has been banned")
 
+  
+
   @discord.slash_command(name="bomb", guild_ids = [1019076662450729043])
   async def bomb(self, ctx):
+
+    def space(num):
+      if num == 0:
+        return "​"
+      else:
+        return " "*num
+
+    def emojis():
+      value = space(0)
+      for i in board:
+        for j in i:
+          if j == 0:
+            value+=space(5)
+          elif j == 1:
+            value+="<:plane_a:1019902337709518880> "
+          elif j == 2:
+            value+="<:plane_b:1019902355526918145> "
+          elif j == 3:
+            value+="<:bomb:1019946392933896202> "
+          elif j == 4:
+            value+="<:twin_towers:1019947918498738207> "
+          elif j == 5:
+            value+="\💥 "
+        value+="\n"
+      return value + space(0)
+
     view = View()
     button = Button(label="allah!", style=discord.ButtonStyle.danger)
     async def allah_callback(interaction):
-      await interaction.response.edit_message(content="🛬\n\n\n\n  \🏘")
-      await asyncio.sleep(0.1)
-      await interaction.followup.edit_message(message_id=interaction.message.id, content="🛬\n\n\n\n  \🏘")
+      last = None
+      board[8][4] = 4
+      await interaction.response.edit_message(content=emojis())
+      for i in range(4):
+        if last:
+          board[last[0]][last[1]] = 0
+        last = [i//2, i]
+        board[i//2][i] = 2
+        await interaction.followup.edit_message(message_id=interaction.message.id, content=emojis())
+      board[last[0]][last[1]] = 0
+      last = [1,4]
+      board[1][4] = 2
+      board[2][4] = 3
+      await interaction.followup.edit_message(message_id=interaction.message.id, content=emojis())
+      board[2][4] = 0
+      for i in range(4):
+        board[last[0]][last[1]] = 0
+        last = [1-(i//2), i+5]
+        board[1-(i//2)][i+5] = 1
+        board[i+2][4] = 0
+        board[i+3][4] = 3
+        await interaction.followup.edit_message(message_id=interaction.message.id, content=emojis())
+      board[6][4] = 0
+      board[7][4] = 3
+      board[0][8] = 0
+      await interaction.followup.edit_message(message_id=interaction.message.id, content=emojis())
+      board[7][4] = 0
+      board[8][4] = 5
+      await interaction.followup.edit_message(message_id=interaction.message.id, content=emojis())
+
+      
+      
     button.callback = allah_callback
     view.add_item(button)
-    
-    await ctx.respond("​\n\n\n\n\n  \🏘", view=view)
+    board = [[0 for i in range(9)] for i in range(9)]
+    board[8][4] = 4
+    await ctx.respond(emojis(), view=view)
 
 def setup(bot: commands.Bot):
     bot.add_cog(Utility(bot))
