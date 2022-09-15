@@ -76,10 +76,9 @@ Spamming tickets will earn you a warning/kick!
   async def fetch_quotes(self):
     await self.bot.wait_until_ready()
     channel = self.bot.get_channel(922440576115281981)
-    quotes = channel.history(limit=None)
     quotelist = []
-    async for i in quotes:
-      quotelist.append([i.clean_content, i.author.name, i.jump_url])
+    async for i in channel.history(limit=None):
+      quotelist.append(i.id)
     db["quotelist"] = quotelist
 
   @discord.slash_command(name="invite")
@@ -87,22 +86,24 @@ Spamming tickets will earn you a warning/kick!
   async def invite(self, ctx):
     await ctx.respond(discord.utils.oauth_url(client_id=self.bot.application_id, permissions=discord.Permissions.advanced()), ephemeral=True)
     
-  @discord.slash_command(name="quote", description="Get some quotes from our server", guild_ids=[846263154546573333])
+  @discord.slash_command(name="quote", description="Get some quotes from our server", guild_ids=[846263154546573333, 1019076662450729043])
   async def quote(self, ctx, amount:int=discord.Option(int, "amount of quotes to get", min_value=1, max_value=5, default=1)):
     quotes = db["quotelist"]
     if len(quotes) == 0:
       await ctx.respond("There are no more quotes! Please wait")
     for i in range(amount):
       view = View()
-      content = random.choice(quotes)
-      if len(content[0]) > 256:
+      channel = self.bot.get_channel(922440576115281981)
+      id = random.choice(quotes)
+      message = await channel.fetch_message(id)
+      if len(message.content) > 256:
         await ctx.respond("message too long, pls ask someone to fix", ephemeral=True)
       else:
-        quotes.remove(content)
-        linkbtn = Button(label="Jump!", style=discord.ButtonStyle.link, url=content[2])
+        quotes.remove(id)
+        linkbtn = Button(label="Jump!", style=discord.ButtonStyle.link, url=message.jump_url)
         view.add_item(linkbtn)
-        embed = discord.Embed(description=f"Random quote from {self.bot.get_channel(922440576115281981).mention}", title=content[0])
-        embed.set_author(name=content[1])
+        embed = discord.Embed(description=f"Random quote from {channel.mention}", title=message.content)
+        embed.set_author(name=message.author.name)
         await ctx.respond(embed=embed, view=view)
         
       
@@ -119,10 +120,20 @@ Spamming tickets will earn you a warning/kick!
 
   @discord.slash_command(name="ban")
   async def ban(self, ctx, user:discord.User):
-    msg = await ctx.respond(f"banning {user.mention}...")
-    await asyncio.sleep(5)
-    await msg.edit("The totally realistic ban has been complete")
+    await ctx.respond(f"{user.mention} has been banned")
 
+  @discord.slash_command(name="bomb", guild_ids = [1019076662450729043])
+  async def bomb(self, ctx):
+    view = View()
+    button = Button(label="allah!", style=discord.ButtonStyle.danger)
+    async def allah_callback(interaction):
+      await interaction.response.edit_message(content="🛬\n\n\n\n  \🏘")
+      await asyncio.sleep(0.1)
+      await interaction.followup.edit_message(message_id=interaction.message.id, content="🛬\n\n\n\n  \🏘")
+    button.callback = allah_callback
+    view.add_item(button)
+    
+    await ctx.respond("​\n\n\n\n\n  \🏘", view=view)
 
 def setup(bot: commands.Bot):
     bot.add_cog(Utility(bot))
